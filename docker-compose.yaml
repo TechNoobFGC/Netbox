@@ -1,0 +1,58 @@
+---
+services:
+  netbox:
+    image: lscr.io/linuxserver/netbox:latest
+    container_name: netbox
+    environment:
+      - TZ=Etc/UTC
+      - SUPERUSER_EMAIL=${ADMIN_EMAIL}
+      - SUPERUSER_PASSWORD=${SUPER_PASSWORD}
+      - ALLOWED_HOST=${HOSTNAME}
+      - DB_NAME=netbox
+      - DB_USER=netbox
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB_TASK=1
+      - REDIS_DB_CACHE=0
+    networks:
+      - default
+      - reverseproxy-nw
+    volumes:
+      - netbox_data:/config
+
+    restart: unless-stopped
+
+  postgres:
+    container_name: netbox-db  
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: netbox
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: netbox
+    volumes:
+      - netbox_db:/var/lib/postgresql/data
+    networks:
+      - default
+  
+  redis:
+    container_name: netbox-redis
+    image: docker.io/redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - netbox_redis:/data    
+    networks:
+      - default
+
+volumes:
+  netbox_data:
+  netbox_redis:
+  netbox_db:
+
+networks:
+  default:
+  reverseproxy-nw:
+    external: true
